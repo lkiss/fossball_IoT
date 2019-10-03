@@ -18,6 +18,11 @@ String redStriker = "RED_STRIKER";
 String redDefender = "RED_DEFENDER";
 String reset = "RESET";
 
+String red = "red";
+String blue = "blue";
+String defence = "blue";
+String striker = "blue";
+
 void setup()
 {
     Serial.begin(9600);
@@ -54,13 +59,15 @@ void preventRequestFlood(int pin)
     }
 }
 
-void sendMatchHistory(String buttonId, String actionType)
+void sendMatchHistory(String team, String position, String actionType)
 {
     client.begin("http://us-central1-hubsson-foosball-eur3.cloudfunctions.net/matchHistory");
     client.addHeader("Content-Type", "application/json");
 
-    String payload = "{\"buttonId\" :";
-    payload += "\"" + buttonId + "\",";
+    String payload = "{\"team\" :";
+    payload += "\"" + team + "\",";
+    payload += "\"position\" :";
+    payload += "\"" + position + "\",";
     payload += "\"action\" :";
     payload += "\"" + actionType + "\"}";
 
@@ -88,35 +95,35 @@ void loop()
     if (redStrikerRead == LOW)
     {
         Serial.println("Red 1 button is pressed");
-        sendMatchHistory(redStriker, getActionType(red1Pin));
+        sendMatchHistory(red, striker, getActionType(red1Pin));
         preventRequestFlood(red1Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (redDefenderRead == LOW)
     {
         Serial.println("Red 2 button is pressed");
-        sendMatchHistory(redDefender, getActionType(red2Pin));
+        sendMatchHistory(red, defence, getActionType(red2Pin));
         preventRequestFlood(red2Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (blueStrikerRead == LOW)
     {
         Serial.println("Blue 1 button is pressed");
-        sendMatchHistory(blueStriker, getActionType(blue1Pin));
+        sendMatchHistory(blue, striker, getActionType(blue1Pin));
         preventRequestFlood(blue1Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (blueDefenderRead == LOW)
     {
         Serial.println("Blue 2 button is pressed");
-        sendMatchHistory(blueDefender, getActionType(blue2Pin));
+        sendMatchHistory(blue, defence, getActionType(blue2Pin));
         preventRequestFlood(blue2Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (resetRead == LOW)
     {
         Serial.println("Reset button is pressed");
-        sendMatchHistory(reset, "reset");
+        sendMatchHistory(reset, "", "reset");
         preventRequestFlood(resetPin);
         delay(buttonDelayInMilliseconds);
     }
