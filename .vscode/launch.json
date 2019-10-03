@@ -12,7 +12,7 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "c:/Repositories/fossball_IoT/.pio/build/nodemcuv2/firmware.elf",
+            "executable": "c:/Private/fossball_IoT/.pio/build/nodemcuv2/firmware.elf",
             "toolchainBinDir": "",
             "preLaunchTask": {
                 "type": "PlatformIO",
@@ -24,7 +24,7 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "c:/Repositories/fossball_IoT/.pio/build/nodemcuv2/firmware.elf",
+            "executable": "c:/Private/fossball_IoT/.pio/build/nodemcuv2/firmware.elf",
             "toolchainBinDir": "",
             "internalConsoleOptions": "openOnSessionStart"
         }

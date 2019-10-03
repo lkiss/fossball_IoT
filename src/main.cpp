@@ -1,7 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#define WIFI_SSID "PNSC_2_4"
-#define WIFI_PASSWORD "5113111_Cons!"
+#define WIFI_SSID "Guestsson"
+#define WIFI_PASSWORD "X6JSO89Z"
 
 HTTPClient client;
 
@@ -40,13 +40,29 @@ void setup()
     Serial.println(WiFi.localIP());
 }
 
-void sendMatchHistory(String buttonId)
+String getActionType(int pin)
+{
+    delay(2000);
+    return digitalRead(pin) == LOW ? "undo" : "goal";
+}
+
+void preventRequestFlood(int pin)
+{
+    while (digitalRead(pin) == LOW)
+    {
+        yield();
+    }
+}
+
+void sendMatchHistory(String buttonId, String actionType)
 {
     client.begin("http://us-central1-hubsson-foosball-eur3.cloudfunctions.net/matchHistory");
     client.addHeader("Content-Type", "application/json");
 
     String payload = "{\"buttonId\" :";
-    payload += "\"" + buttonId + "\"}";
+    payload += "\"" + buttonId + "\",";
+    payload += "\"action\" :";
+    payload += "\"" + actionType + "\"}";
 
     Serial.println("Sending payload");
     Serial.println(payload);
@@ -72,31 +88,36 @@ void loop()
     if (redStrikerRead == LOW)
     {
         Serial.println("Red 1 button is pressed");
-        sendMatchHistory(redStriker);
+        sendMatchHistory(redStriker, getActionType(red1Pin));
+        preventRequestFlood(red1Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (redDefenderRead == LOW)
     {
         Serial.println("Red 2 button is pressed");
-        sendMatchHistory(redDefender);
+        sendMatchHistory(redDefender, getActionType(red2Pin));
+        preventRequestFlood(red2Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (blueStrikerRead == LOW)
     {
         Serial.println("Blue 1 button is pressed");
-        sendMatchHistory(blueStriker);
+        sendMatchHistory(blueStriker, getActionType(blue1Pin));
+        preventRequestFlood(blue1Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (blueDefenderRead == LOW)
     {
         Serial.println("Blue 2 button is pressed");
-        sendMatchHistory(blueDefender);
+        sendMatchHistory(blueDefender, getActionType(blue2Pin));
+        preventRequestFlood(blue2Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (resetRead == LOW)
     {
         Serial.println("Reset button is pressed");
-        sendMatchHistory(reset);
+        sendMatchHistory(reset, "reset");
+        preventRequestFlood(resetPin);
         delay(buttonDelayInMilliseconds);
     }
 }
