@@ -1,7 +1,10 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
-#define WIFI_SSID "Guestsson"
-#define WIFI_PASSWORD "X6JSO89Z"
+// #define WIFI_SSID "Guestsson"
+// #define WIFI_PASSWORD "X6JSO89Z"
+
+#define WIFI_SSID "PNSC_2_4"
+#define WIFI_PASSWORD "5113111_Cons!"
 
 HTTPClient client;
 
@@ -10,7 +13,7 @@ uint red2Pin = 5;
 uint blue1Pin = 14;
 uint blue2Pin = 12;
 uint resetPin = 13;
-uint buttonDelayInMilliseconds = 200;
+uint buttonDelayInMilliseconds = 1000;
 
 String blueStriker = "BLUE_STRIKER";
 String blueDefender = "BLUE_DEFENDER";
@@ -20,8 +23,22 @@ String reset = "RESET";
 
 String red = "red";
 String blue = "blue";
-String defence = "blue";
-String striker = "blue";
+String defence = "defence";
+String striker = "striker";
+
+struct Player
+{
+    String position = "";
+    String team = "";
+};
+struct Action
+{
+    String actionType = "";
+    String team01 = "";
+    String position01 = "";
+    String team02 = "";
+    String position02 = "";
+};
 
 void setup()
 {
@@ -45,10 +62,97 @@ void setup()
     Serial.println(WiFi.localIP());
 }
 
-String getActionType(int pin)
+Player getPlayer(int currentPin)
 {
+    Player player;
+
+    if (digitalRead(red1Pin) == LOW && red1Pin != currentPin)
+    {
+        player.position = striker;
+        player.team = red;
+    }
+    else if (digitalRead(red2Pin) == LOW && red2Pin != currentPin)
+    {
+        player.position = defence;
+        player.team = red;
+    }
+    else if (digitalRead(blue1Pin) == LOW && blue1Pin != currentPin)
+    {
+        player.position = striker;
+        player.team = blue;
+    }
+    else if (digitalRead(blue2Pin) == LOW && blue2Pin != currentPin)
+    {
+        player.position = defence;
+        player.team = blue;
+    }
+
+    return player;
+}
+
+// String getActionType(int pin)
+// {
+//     delay(100);
+//     int pulseTime = pulseIn(pin, LOW, 200000);
+
+//     Serial.print("PulseTime: ");
+//     Serial.println(pulseTime);
+
+//     if (pulseTime != 0 && pulseTime >= 200 && pulseTime <= 200000)
+//     {
+//         return "ownGoal";
+//     }
+
+//     delay(2000);
+
+//     if (digitalRead(pin) == LOW)
+//     {
+//         if (getPlayer(pin) != "")
+//         {
+//             return "swap";
+//         }
+//     }
+
+//     return digitalRead(pin) == LOW ? "undo" : "goal";
+// }
+
+Action getAction(int pin, Player player)
+{
+    delay(10);
+    int pulseTime = pulseIn(pin, HIGH, 2000000);
+
+    Serial.print("PulseTime: ");
+    Serial.println(pulseTime);
+
+    Action action;
+    action.team01 = player.team;
+    action.position01 = player.position;
+
+    if (pulseTime != 0 && pulseTime >= 100 && pulseTime <= 2000000)
+    {
+        action.actionType = "ownGoal";
+        return action;
+    }
+
     delay(2000);
-    return digitalRead(pin) == LOW ? "undo" : "goal";
+
+    if (digitalRead(pin) == LOW)
+    {
+        Player swapTeam = getPlayer(pin);
+        if (swapTeam.team != "")
+        {
+            action.team02 = swapTeam.team;
+            action.position02 = swapTeam.position;
+            action.actionType = "swap";
+            return action;
+        }
+
+        action.actionType = "undo";
+        return action;
+    }
+
+    action.actionType = "goal";
+    return action;
 }
 
 void preventRequestFlood(int pin)
@@ -59,17 +163,52 @@ void preventRequestFlood(int pin)
     }
 }
 
-void sendMatchHistory(String team, String position, String actionType)
+// void sendMatchHistory(String team, String position, String actionType)
+// {
+//     client.begin("http://us-central1-hubsson-foosball-eur3.cloudfunctions.net/matchHistory");
+//     client.addHeader("Content-Type", "application/json");
+
+//     String payload = "{\"team\" :";
+//     payload += "\"" + team + "\",";
+//     payload += "\"position\" :";
+//     payload += "\"" + position + "\",";
+//     payload += "\"action\" :";
+//     payload += "\"" + actionType + "\"}";
+
+//     Serial.println("Sending payload");
+//     Serial.println(payload);
+
+//     int errorCode = client.PUT(payload);
+
+//     if (errorCode != HTTP_CODE_OK)
+//     {
+//         Serial.println(client.errorToString(errorCode));
+//     }
+
+//     client.end();
+// }
+
+void sendMatchHistory(Action action)
 {
     client.begin("http://us-central1-hubsson-foosball-eur3.cloudfunctions.net/matchHistory");
     client.addHeader("Content-Type", "application/json");
 
-    String payload = "{\"team\" :";
-    payload += "\"" + team + "\",";
-    payload += "\"position\" :";
-    payload += "\"" + position + "\",";
+    String payload = "{\"team01\" :";
+    payload += "\"" + action.team01 + "\",";
+    payload += "\"position01\" :";
+    payload += "\"" + action.position01 + "\",";
     payload += "\"action\" :";
-    payload += "\"" + actionType + "\"}";
+    payload += "\"" + action.actionType + "\"";
+
+    if (action.team02 != "")
+    {
+        payload += ",\"team02\" :";
+        payload += "\"" + action.team02 + "\",";
+        payload += "\"position02\" :";
+        payload += "\"" + action.position02 + "\"";
+    }
+
+    payload += "}";
 
     Serial.println("Sending payload");
     Serial.println(payload);
@@ -95,35 +234,66 @@ void loop()
     if (redStrikerRead == LOW)
     {
         Serial.println("Red 1 button is pressed");
-        sendMatchHistory(red, striker, getActionType(red1Pin));
+
+        Player redStrikerPlayer;
+        redStrikerPlayer.team = red;
+        redStrikerPlayer.position = striker;
+
+        Action redStrikerAction = getAction(red1Pin, redStrikerPlayer);
+
+        sendMatchHistory(redStrikerAction);
         preventRequestFlood(red1Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (redDefenderRead == LOW)
     {
         Serial.println("Red 2 button is pressed");
-        sendMatchHistory(red, defence, getActionType(red2Pin));
+
+        Player redDefenderPlayer;
+        redDefenderPlayer.team = red;
+        redDefenderPlayer.position = defence;
+
+        Action redDefenderAction = getAction(red2Pin, redDefenderPlayer);
+
+        sendMatchHistory(redDefenderAction);
+
         preventRequestFlood(red2Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (blueStrikerRead == LOW)
     {
         Serial.println("Blue 1 button is pressed");
-        sendMatchHistory(blue, striker, getActionType(blue1Pin));
+        Player blueStrikerPlayer;
+        blueStrikerPlayer.team = blue;
+        blueStrikerPlayer.position = striker;
+
+        Action blueStrikerAction = getAction(blue1Pin, blueStrikerPlayer);
+
+        sendMatchHistory(blueStrikerAction);
+
         preventRequestFlood(blue1Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (blueDefenderRead == LOW)
     {
         Serial.println("Blue 2 button is pressed");
-        sendMatchHistory(blue, defence, getActionType(blue2Pin));
+        Player blueDefenderPlayer;
+        blueDefenderPlayer.team = blue;
+        blueDefenderPlayer.position = defence;
+
+        Action blueDefenderAction = getAction(blue1Pin, blueDefenderPlayer);
+
+        sendMatchHistory(blueDefenderAction);
         preventRequestFlood(blue2Pin);
         delay(buttonDelayInMilliseconds);
     }
     if (resetRead == LOW)
     {
         Serial.println("Reset button is pressed");
-        sendMatchHistory(reset, "", "reset");
+        Action resetAction;
+        resetAction.actionType = reset;
+
+        sendMatchHistory(resetAction);
         preventRequestFlood(resetPin);
         delay(buttonDelayInMilliseconds);
     }
