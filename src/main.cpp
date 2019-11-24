@@ -23,7 +23,7 @@ String reset = "RESET";
 
 String red = "red";
 String blue = "blue";
-String defence = "defence";
+String defender = "defender";
 String striker = "striker";
 
 struct Player
@@ -73,7 +73,7 @@ Player getPlayer(int currentPin)
     }
     else if (digitalRead(red2Pin) == LOW && red2Pin != currentPin)
     {
-        player.position = defence;
+        player.position = defender;
         player.team = red;
     }
     else if (digitalRead(blue1Pin) == LOW && blue1Pin != currentPin)
@@ -83,7 +83,7 @@ Player getPlayer(int currentPin)
     }
     else if (digitalRead(blue2Pin) == LOW && blue2Pin != currentPin)
     {
-        player.position = defence;
+        player.position = defender;
         player.team = blue;
     }
 
@@ -251,7 +251,7 @@ void loop()
 
         Player redDefenderPlayer;
         redDefenderPlayer.team = red;
-        redDefenderPlayer.position = defence;
+        redDefenderPlayer.position = defender;
 
         Action redDefenderAction = getAction(red2Pin, redDefenderPlayer);
 
@@ -279,7 +279,7 @@ void loop()
         Serial.println("Blue 2 button is pressed");
         Player blueDefenderPlayer;
         blueDefenderPlayer.team = blue;
-        blueDefenderPlayer.position = defence;
+        blueDefenderPlayer.position = defender;
 
         Action blueDefenderAction = getAction(blue1Pin, blueDefenderPlayer);
 
