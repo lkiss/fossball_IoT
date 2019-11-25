@@ -90,32 +90,6 @@ Player getPlayer(int currentPin)
     return player;
 }
 
-// String getActionType(int pin)
-// {
-//     delay(100);
-//     int pulseTime = pulseIn(pin, LOW, 200000);
-
-//     Serial.print("PulseTime: ");
-//     Serial.println(pulseTime);
-
-//     if (pulseTime != 0 && pulseTime >= 200 && pulseTime <= 200000)
-//     {
-//         return "ownGoal";
-//     }
-
-//     delay(2000);
-
-//     if (digitalRead(pin) == LOW)
-//     {
-//         if (getPlayer(pin) != "")
-//         {
-//             return "swap";
-//         }
-//     }
-
-//     return digitalRead(pin) == LOW ? "undo" : "goal";
-// }
-
 Action getAction(int pin, Player player)
 {
     delay(10);
@@ -162,31 +136,6 @@ void preventRequestFlood(int pin)
         yield();
     }
 }
-
-// void sendMatchHistory(String team, String position, String actionType)
-// {
-//     client.begin("http://us-central1-hubsson-foosball-eur3.cloudfunctions.net/matchHistory");
-//     client.addHeader("Content-Type", "application/json");
-
-//     String payload = "{\"team\" :";
-//     payload += "\"" + team + "\",";
-//     payload += "\"position\" :";
-//     payload += "\"" + position + "\",";
-//     payload += "\"action\" :";
-//     payload += "\"" + actionType + "\"}";
-
-//     Serial.println("Sending payload");
-//     Serial.println(payload);
-
-//     int errorCode = client.PUT(payload);
-
-//     if (errorCode != HTTP_CODE_OK)
-//     {
-//         Serial.println(client.errorToString(errorCode));
-//     }
-
-//     client.end();
-// }
 
 void sendMatchHistory(Action action)
 {
